@@ -1,0 +1,92 @@
+name: native-bundles
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Resolve bundle metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "${RUNNER_OS}" in
+            Linux)
+              os_slug="linux"
+              lib_file="libpdf_inspector_ffi.so"
+              ;;
+            macOS)
+              os_slug="darwin"
+              lib_file="libpdf_inspector_ffi.dylib"
+              ;;
+            Windows)
+              os_slug="windows"
+              lib_file="pdf_inspector_ffi.dll"
+              ;;
+            *)
+              echo "Unsupported runner OS: ${RUNNER_OS}"
+              exit 1
+              ;;
+          esac
+
+          case "${RUNNER_ARCH}" in
+            X64) arch_slug="x86_64" ;;
+            ARM64) arch_slug="arm64" ;;
+            *)
+              echo "Unsupported runner architecture: ${RUNNER_ARCH}"
+              exit 1
+              ;;
+          esac
+
+          platform="${os_slug}-${arch_slug}"
+
+          echo "platform=${platform}" >> "${GITHUB_OUTPUT}"
+          echo "lib_file=${lib_file}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build native FFI crate
+        working-directory: native/pdf-inspector-ffi
+        run: cargo build --release --locked
+
+      - name: Assemble bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          source_path="native/pdf-inspector-ffi/target/release/${{ steps.meta.outputs.lib_file }}"
+          if [ ! -f "${source_path}" ]; then
+            echo "Missing build output: ${source_path}"
+            exit 1
+          fi
+
+          dest_dir="dist/native/lib/${{ steps.meta.outputs.platform }}"
+          mkdir -p "${dest_dir}"
+          cp "${source_path}" "${dest_dir}/${{ steps.meta.outputs.lib_file }}"
+
+      - name: Upload native bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-bundle-${{ steps.meta.outputs.platform }}
+          path: dist/native/lib/${{ steps.meta.outputs.platform }}
+          if-no-files-found: error
+          retention-days: 14

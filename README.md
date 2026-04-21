@@ -1,93 +1,133 @@
-# :package_description
+# php-firepdf
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-<!--delete-->
----
-This repo can be used to scaffold a Laravel package. Follow these steps to get started:
+PHP FFI wrapper for [pdf-inspector](https://github.com/firecrawl/pdf-inspector), a fast Rust library for PDF classification and text extraction.
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Have fun creating your package.
-4. If you need help creating a package, consider picking up our <a href="https://laravelpackage.training">Laravel Package Training</a> video course.
----
-<!--/delete-->
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/ferdiunal/php-firepdf.svg?style=flat-square)](https://packagist.org/packages/ferdiunal/php-firepdf)
+[![Total Downloads](https://img.shields.io/packagist/dt/ferdiunal/php-firepdf.svg?style=flat-square)](https://packagist.org/packages/ferdiunal/php-firepdf)
 
-## Support us
+This package exposes the full pdf-inspector API surface (process, detect, classify, extract text, region extraction, per-page markdown) through PHP FFI. It includes a Laravel service provider and facade for seamless integration.
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/:package_name.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/:package_name)
+## Requirements
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+- PHP 8.4+
+- PHP FFI extension enabled (`extension=ffi`)
+- Rust toolchain (only needed when you build native binaries yourself)
 
 ## Installation
 
-You can install the package via composer:
-
 ```bash
-composer require :vendor_slug/:package_slug
+composer require ferdiunal/php-firepdf
 ```
 
-You can publish and run the migrations with:
+### Native Library Resolution (Production)
+
+The package resolves the shared library in this order:
+
+1. `FIREPDF_LIB_PATH` (or Laravel `php-firepdf.lib_path`)
+2. Bundled package path: `native/lib/<os>-<arch>/`
+3. Dev fallback: `native/pdf-inspector-ffi/target/release/`
+
+If your production deployment does not set `FIREPDF_LIB_PATH`, make sure the package contains the prebuilt file under `native/lib/<os>-<arch>/`.
+
+### Build the Rust FFI bridge (local/dev)
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
-php artisan migrate
+cd vendor/ferdiunal/php-firepdf/native/pdf-inspector-ffi
+cargo build --release --locked
+
+# copy the built file into package bundle layout
+cd ../..
+./scripts/stage-native-bundle.sh
 ```
 
-You can publish the config file with:
+### Build Bundles for Win/macOS/Linux
+
+Use GitHub Actions workflow `native-bundles` to produce bundle artifacts for Linux, macOS, and Windows.
+The output folder name includes runner architecture (for example: `linux-x86_64`, `darwin-arm64`, `windows-x86_64`).
+
+Each artifact contains:
+
+- `native/lib/<os>-<arch>/<library>`
+
+Include these files in the package release, or set `FIREPDF_LIB_PATH` explicitly at runtime.
+
+### Laravel config (optional)
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
+php artisan vendor:publish --tag="php-firepdf-config"
 ```
 
 ## Usage
 
+### Standalone
+
 ```php
-$:variable = new VendorName\Skeleton();
-echo $:variable->echoPhrase('Hello, VendorName!');
+use Ferdiunal\FirePdf\FirePdf;
+
+$pdf = new FirePdf();
+
+// Full processing: detect + extract + markdown
+$result = $pdf->processPdf('document.pdf');
+echo $result->pdfType;   // TextBased, Scanned, ImageBased, Mixed
+echo $result->markdown;  // Markdown string or null
+
+// Fast detection only
+$info = $pdf->detectPdf('document.pdf');
+
+// From bytes (no filesystem)
+$bytes = file_get_contents('document.pdf');
+$result = $pdf->processPdfBytes($bytes);
+
+// Per-page markdown
+$pages = $pdf->extractPagesMarkdown('document.pdf');
+foreach ($pages->pages as $page) {
+    echo "Page {$page->page}: {$page->markdown}";
+}
 ```
+
+### Laravel
+
+```php
+use Ferdiunal\FirePdf\Facades\FirePdf;
+
+$result = FirePdf::processPdf('document.pdf');
+```
+
+## API Reference
+
+| Method | Description |
+|---|---|
+| `processPdf(path, pages?)` | Full processing (detect + extract + markdown) |
+| `processPdfBytes(data, pages?)` | Full processing from bytes |
+| `detectPdf(path)` | Fast detection only |
+| `detectPdfBytes(data)` | Fast detection from bytes |
+| `classifyPdf(path)` | Lightweight classification |
+| `classifyPdfBytes(data)` | Lightweight classification from bytes |
+| `extractText(path)` | Plain text extraction |
+| `extractTextBytes(data)` | Plain text from bytes |
+| `extractTextWithPositions(path, pages?)` | Text with X/Y coords and font info |
+| `extractTextWithPositionsBytes(data, pages?)` | Positions from bytes |
+| `extractTextInRegions(path, pageRegions)` | Extract text in bounding-box regions |
+| `extractTextInRegionsBytes(data, pageRegions)` | Region extraction from bytes |
+| `extractTablesInRegions(path, pageRegions)` | Table markdown in regions |
+| `extractTablesInRegionsBytes(data, pageRegions)` | Table regions from bytes |
+| `extractPagesMarkdown(path, pages?)` | Per-page markdown + layout metadata |
+| `extractPagesMarkdownBytes(data, pages?)` | Per-page markdown from bytes |
 
 ## Testing
 
 ```bash
+# Native build
+cd native/pdf-inspector-ffi
+cargo build --release --locked
+
+# PHP tests (requires the FFI library to be built)
 composer test
+
+# PHP static analysis
+composer analyse
 ```
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [:author_name](https://github.com/:author_username)
-- [All Contributors](../../contributors)
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+MIT. Please see [License File](LICENSE.md) for more information.

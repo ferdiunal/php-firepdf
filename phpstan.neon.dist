@@ -2,9 +2,12 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-    level: 5
+    level: 9
     paths:
         - src
         - config
-        - database
     tmpDir: build/phpstan
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        - message: '#Call to an undefined method FFI::firepdf_free_string#'
+          path: src/FFI/Inspector.php
