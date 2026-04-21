@@ -137,6 +137,11 @@ C;
         return $this->ffi;
     }
 
+    public function close(): void
+    {
+        $this->ffi = null;
+    }
+
     /**
      * @return array{ok: true, data: mixed}
      */

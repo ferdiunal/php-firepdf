@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use Ferdiunal\FirePdf\FirePdf;
+use Ferdiunal\FirePdf\Runtime\FirePdfRuntimeOptions;
 
 /**
  * @param  string  $name
@@ -29,7 +30,7 @@ $pdfPaths = [
     $projectRoot . '/o_henry_oykuleri_turkce.pdf',
 ];
 
-$firePdf = new FirePdf();
+$firePdf = new FirePdf(runtimeOptions: new FirePdfRuntimeOptions(telemetry: true));
 $summary = [];
 
 foreach ($pdfPaths as $pdfPath) {
@@ -59,6 +60,8 @@ foreach ($pdfPaths as $pdfPath) {
     }
 
     try {
+        $firePdf->resetRuntimeSnapshot();
+        $wallStartedAt = hrtime(true);
         $result = $firePdf->processPdf($pdfPath);
         $markdown = $result->markdown;
 
@@ -71,8 +74,21 @@ foreach ($pdfPaths as $pdfPath) {
             $markdown = trim(implode("\n\n", $chunks));
         }
 
+        $wallDurationMs = (hrtime(true) - $wallStartedAt) / 1_000_000;
+        $snapshot = $firePdf->getRuntimeSnapshot();
+
         $body = "## Result\n\n";
         $body .= "Extraction succeeded.\n\n";
+        $body .= "## Runtime Metrics\n\n";
+        $body .= "- Operations: `{$snapshot->opCount}`\n";
+        $body .= "- Last duration (ms): `" . number_format($snapshot->lastDurationMs, 2) . "`\n";
+        $body .= "- Average duration (ms): `" . number_format($snapshot->averageDurationMs, 2) . "`\n";
+        $body .= "- Max duration (ms): `" . number_format($snapshot->maxDurationMs, 2) . "`\n";
+        $body .= "- Wall duration (ms): `" . number_format($wallDurationMs, 2) . "`\n";
+        $body .= "- Current memory (MB): `" . number_format($snapshot->currentMemoryBytes / 1024 / 1024, 2) . "`\n";
+        $body .= "- Peak memory (MB): `" . number_format($snapshot->peakMemoryBytes / 1024 / 1024, 2) . "`\n";
+        $body .= "- Recycle recommended: `" . ($snapshot->recycleRecommended ? 'yes' : 'no') . "`\n";
+        $body .= "- Recycle reason: `" . ($snapshot->recycleReason ?? 'none') . "`\n\n";
         $body .= "## Markdown\n\n";
         $body .= ($markdown !== '' ? $markdown : "_No markdown content produced._") . "\n";
         file_put_contents($outputPath, $header . $body);
@@ -81,6 +97,11 @@ foreach ($pdfPaths as $pdfPath) {
             'file' => $name,
             'status' => 'ok',
             'output' => $outputPath,
+            'op_count' => $snapshot->opCount,
+            'last_duration_ms' => round($snapshot->lastDurationMs, 2),
+            'wall_duration_ms' => round($wallDurationMs, 2),
+            'current_memory_mb' => round($snapshot->currentMemoryBytes / 1024 / 1024, 2),
+            'peak_memory_mb' => round($snapshot->peakMemoryBytes / 1024 / 1024, 2),
         ];
     } catch (\Throwable $e) {
         $body = "## Result\n\n";

@@ -93,6 +93,34 @@ use Ferdiunal\FirePdf\Facades\FirePdf;
 $result = FirePdf::processPdf('document.pdf');
 ```
 
+### Laravel Validation Rules (Real PDF Check)
+
+Object rule:
+
+```php
+use Ferdiunal\FirePdf\Rules\ValidPdf;
+
+$rules = [
+    'document' => ['required', 'file', new ValidPdf()],
+];
+```
+
+String alias:
+
+```php
+$rules = [
+    'document' => ['required', 'file', 'firepdf_pdf'],
+];
+```
+
+Recommended for early filtering + deep validation:
+
+```php
+$rules = [
+    'document' => ['required', 'file', 'mimetypes:application/pdf', 'firepdf_pdf'],
+];
+```
+
 ## API Reference
 
 | Method | Description |
@@ -113,6 +141,72 @@ $result = FirePdf::processPdf('document.pdf');
 | `extractTablesInRegionsBytes(data, pageRegions)` | Table regions from bytes |
 | `extractPagesMarkdown(path, pages?)` | Per-page markdown + layout metadata |
 | `extractPagesMarkdownBytes(data, pages?)` | Per-page markdown from bytes |
+| `getRuntimeSnapshot()` | Returns aggregate runtime telemetry for worker memory/speed |
+| `resetRuntimeSnapshot()` | Resets aggregate runtime telemetry counters |
+| `shouldRecycleWorker()` | Returns true when configured soft/hard memory limit was exceeded |
+| `close()` | Closes the FFI handle and runs a GC cycle |
+
+Validation extensions:
+
+- `Ferdiunal\FirePdf\Rules\ValidPdf` (object rule)
+- `firepdf_pdf` (string alias)
+
+## Server Recipes
+
+### Parse Time & Memory Telemetry
+
+```php
+$firePdf->resetRuntimeSnapshot();
+$result = $firePdf->processPdf($path);
+$snapshot = $firePdf->getRuntimeSnapshot();
+
+echo $snapshot->lastDurationMs;      // last operation duration
+echo $snapshot->averageDurationMs;   // average duration
+echo $snapshot->currentMemoryBytes;  // current process memory
+echo $snapshot->peakMemoryBytes;     // process peak memory
+```
+
+For quick markdown + telemetry reports on sample PDFs:
+
+```bash
+php scripts/test-user-pdfs.php
+```
+
+### Swoole / OpenSwoole (request loop)
+
+```php
+$result = $firePdf->processPdf($path);
+
+if ($firePdf->shouldRecycleWorker()) {
+    // Mark worker for graceful recycle at end of request.
+}
+```
+
+### FrankenPHP worker mode
+
+```php
+$result = $firePdf->processPdf($path);
+
+if ($firePdf->shouldRecycleWorker()) {
+    // Trigger worker restart in your supervisor/worker control flow.
+}
+```
+
+### RoadRunner worker
+
+```php
+$result = $firePdf->processPdf($path);
+
+if ($firePdf->shouldRecycleWorker()) {
+    // Stop current worker and let RR spawn a fresh one.
+}
+```
+
+Recommended policy:
+
+- Use worker `max requests` and `shouldRecycleWorker()` together.
+- Set `soft_limit_mb` below your process hard limit.
+- Set `hard_limit_mb` as a deterministic recycle threshold.
 
 ## Testing
 
