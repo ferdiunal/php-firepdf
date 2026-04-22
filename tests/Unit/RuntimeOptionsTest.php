@@ -6,7 +6,7 @@ use Ferdiunal\FirePdf\Runtime\FirePdfRuntimeOptions;
 
 describe('FirePdfRuntimeOptions', function () {
     it('provides safe defaults', function (): void {
-        $options = new FirePdfRuntimeOptions();
+        $options = new FirePdfRuntimeOptions;
 
         expect($options->telemetry)->toBeTrue();
         expect($options->gcCollectEvery)->toBe(0);

@@ -13,7 +13,7 @@ final class PdfUploadValidator
 {
     public function validate(mixed $value): bool
     {
-        if (!$value instanceof File) {
+        if (! $value instanceof File) {
             return false;
         }
 
@@ -23,13 +23,13 @@ final class PdfUploadValidator
         }
 
         $bytes = @file_get_contents($path);
-        if (!is_string($bytes)) {
+        if (! is_string($bytes)) {
             return false;
         }
 
         try {
             $firePdf = app(FirePdf::class);
-            if (!$firePdf instanceof FirePdf) {
+            if (! $firePdf instanceof FirePdf) {
                 return false;
             }
 

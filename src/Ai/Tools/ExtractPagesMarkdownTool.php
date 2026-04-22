@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Ferdiunal\FirePdf\Ai\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Throwable;
@@ -30,7 +31,7 @@ final class ExtractPagesMarkdownTool extends AbstractFirePdfTool implements Tool
     }
 
     /**
-     * @return array<string, \Illuminate\JsonSchema\Types\Type>
+     * @return array<string, Type>
      */
     public function schema(JsonSchema $schema): array
     {

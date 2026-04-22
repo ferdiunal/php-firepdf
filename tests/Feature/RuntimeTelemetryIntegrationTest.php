@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Ferdiunal\FirePdf\FirePdf;
 use Ferdiunal\FirePdf\FFI\Inspector;
+use Ferdiunal\FirePdf\FirePdf;
 use Ferdiunal\FirePdf\Runtime\FirePdfRuntimeOptions;
 
 $resolveLibraryPath = static function (): ?string {
@@ -24,10 +24,10 @@ $resolveLibraryPath = static function (): ?string {
 $resolveSamplePdf = static function (): ?string {
     $projectRoot = dirname(__DIR__, 2);
     $candidates = [
-        $projectRoot . '/SaaS Chatbot Yapılandırma ve Maliyet Analizi.pdf',
-        $projectRoot . '/o_henry_oykuleri_turkce.pdf',
-        $projectRoot . '/../pdf-inspector/tests/fixtures/2013-app2.pdf',
-        $projectRoot . '/../pdf-inspector/tests/fixtures/td9264.pdf',
+        $projectRoot.'/SaaS Chatbot Yapılandırma ve Maliyet Analizi.pdf',
+        $projectRoot.'/o_henry_oykuleri_turkce.pdf',
+        $projectRoot.'/../pdf-inspector/tests/fixtures/2013-app2.pdf',
+        $projectRoot.'/../pdf-inspector/tests/fixtures/td9264.pdf',
     ];
 
     foreach ($candidates as $candidate) {
@@ -41,7 +41,7 @@ $resolveSamplePdf = static function (): ?string {
 
 describe('Runtime telemetry integration', function () use ($resolveLibraryPath, $resolveSamplePdf) {
     beforeEach(function () use ($resolveLibraryPath, $resolveSamplePdf): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 

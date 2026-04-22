@@ -25,7 +25,7 @@ final class PdfToolInputResolver
         $scopedPath = $this->toScopedPath($normalizedPath);
         $disk = $this->disk();
 
-        if (!$disk->exists($scopedPath)) {
+        if (! $disk->exists($scopedPath)) {
             throw new InvalidInputException('The requested PDF was not found in the configured AI tool storage scope.');
         }
 
@@ -35,7 +35,7 @@ final class PdfToolInputResolver
             throw new InvalidInputException('The requested PDF could not be read from the configured storage disk.');
         }
 
-        if (!is_string($bytes) || $bytes === '') {
+        if (! is_string($bytes) || $bytes === '') {
             throw new InvalidInputException('The requested PDF is empty or unreadable.');
         }
 
@@ -62,7 +62,7 @@ final class PdfToolInputResolver
             ? config('php-firepdf.ai_tools.disk', 'local')
             : 'local';
 
-        if (!is_string($configured) || trim($configured) === '') {
+        if (! is_string($configured) || trim($configured) === '') {
             throw new InvalidInputException('The AI tool disk configuration is invalid.');
         }
 
@@ -75,7 +75,7 @@ final class PdfToolInputResolver
             ? config('php-firepdf.ai_tools.base_path', '')
             : '';
 
-        if (!is_string($configured)) {
+        if (! is_string($configured)) {
             throw new InvalidInputException('The AI tool base path configuration is invalid.');
         }
 
@@ -172,14 +172,14 @@ final class PdfToolInputResolver
             return $this->firePdf;
         }
 
-        if (!function_exists('app')) {
+        if (! function_exists('app')) {
             throw new InvalidInputException('Laravel application container is not available.');
         }
 
         /** @var mixed $service */
         $service = app(FirePdf::class);
 
-        if (!$service instanceof FirePdf) {
+        if (! $service instanceof FirePdf) {
             throw new InvalidInputException('Unable to resolve FirePdf from the application container.');
         }
 
@@ -201,14 +201,14 @@ final class PdfToolInputResolver
             return $this->filesystems;
         }
 
-        if (!function_exists('app')) {
+        if (! function_exists('app')) {
             throw new InvalidInputException('Laravel application container is not available.');
         }
 
         /** @var mixed $factory */
         $factory = app(FilesystemFactory::class);
 
-        if (!$factory instanceof FilesystemFactory) {
+        if (! $factory instanceof FilesystemFactory) {
             throw new InvalidInputException('Unable to resolve the filesystem factory from the application container.');
         }
 

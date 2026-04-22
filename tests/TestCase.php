@@ -2,9 +2,9 @@
 
 namespace Ferdiunal\FirePdf\Tests;
 
+use Ferdiunal\FirePdf\FirePdfServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Ferdiunal\FirePdf\FirePdfServiceProvider;
 
 class TestCase extends Orchestra
 {

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Ferdiunal\FirePdf\Exceptions\ProcessingException;
-use Ferdiunal\FirePdf\FirePdf;
 use Ferdiunal\FirePdf\FFI\Inspector;
+use Ferdiunal\FirePdf\FirePdf;
 
 $resolveLibraryPath = static function (): ?string {
     $env = getenv('FIREPDF_LIB_PATH');
@@ -23,7 +23,7 @@ $resolveLibraryPath = static function (): ?string {
 
 describe('Native integration', function () use ($resolveLibraryPath) {
     beforeEach(function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 

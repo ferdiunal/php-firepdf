@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Ferdiunal\FirePdf\Facades\FirePdf;
 use Ferdiunal\FirePdf\Exceptions\ProcessingException;
-use Ferdiunal\FirePdf\FirePdf as FirePdfClass;
+use Ferdiunal\FirePdf\Facades\FirePdf;
 use Ferdiunal\FirePdf\FFI\Inspector;
+use Ferdiunal\FirePdf\FirePdf as FirePdfClass;
 
 describe('Laravel binding', function () {
     beforeEach(function (): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
     });
