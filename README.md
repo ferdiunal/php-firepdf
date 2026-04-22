@@ -5,6 +5,8 @@ PHP FFI wrapper for [pdf-inspector](https://github.com/firecrawl/pdf-inspector),
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/ferdiunal/php-firepdf.svg?style=flat-square)](https://packagist.org/packages/ferdiunal/php-firepdf)
 [![Total Downloads](https://img.shields.io/packagist/dt/ferdiunal/php-firepdf.svg?style=flat-square)](https://packagist.org/packages/ferdiunal/php-firepdf)
 
+Documentation: **English** | [Türkçe](README.TR.md)
+
 This package exposes the full pdf-inspector API surface (process, detect, classify, extract text, region extraction, per-page markdown) through PHP FFI. It includes a Laravel service provider and facade for seamless integration.
 
 ## Requirements
