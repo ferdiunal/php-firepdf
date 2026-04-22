@@ -35,4 +35,19 @@ return [
         'soft_limit_mb' => $_ENV['FIREPDF_RUNTIME_SOFT_LIMIT_MB'] ?? 0,
         'hard_limit_mb' => $_ENV['FIREPDF_RUNTIME_HARD_LIMIT_MB'] ?? 0,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | AI SDK Tool Storage Scope
+    |--------------------------------------------------------------------------
+    |
+    | These options define the storage scope used by the AI SDK tool classes
+    | located under Ferdiunal\FirePdf\Ai\Tools\*. Tool input paths are
+    | always resolved relative to this base path on the configured disk.
+    |
+    */
+    'ai_tools' => [
+        'disk' => $_ENV['FIREPDF_AI_TOOLS_DISK'] ?? 'local',
+        'base_path' => $_ENV['FIREPDF_AI_TOOLS_BASE_PATH'] ?? '',
+    ],
 ];

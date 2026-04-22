@@ -93,6 +93,80 @@ use Ferdiunal\FirePdf\Facades\FirePdf;
 $result = FirePdf::processPdf('document.pdf');
 ```
 
+### Laravel AI SDK Tools (Laravel 13)
+
+This package ships optional AI SDK-compatible tools under the
+`Ferdiunal\FirePdf\Ai\Tools` namespace:
+
+- `DetectPdfTool`
+- `ClassifyPdfTool`
+- `ProcessPdfTool`
+- `ExtractTextTool`
+- `ExtractPagesMarkdownTool`
+
+These tools follow the Laravel AI SDK `Tool` contract and can be returned
+explicitly from your agent's `tools()` method:
+
+```php
+<?php
+
+namespace App\Ai\Agents;
+
+use Ferdiunal\FirePdf\Ai\Tools\ClassifyPdfTool;
+use Ferdiunal\FirePdf\Ai\Tools\DetectPdfTool;
+use Ferdiunal\FirePdf\Ai\Tools\ExtractPagesMarkdownTool;
+use Ferdiunal\FirePdf\Ai\Tools\ExtractTextTool;
+use Ferdiunal\FirePdf\Ai\Tools\ProcessPdfTool;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasTools;
+use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Promptable;
+
+final class PdfAssistant implements Agent, HasTools
+{
+    use Promptable;
+
+    /**
+     * @return Tool[]
+     */
+    public function tools(): iterable
+    {
+        return [
+            new DetectPdfTool(),
+            new ClassifyPdfTool(),
+            new ProcessPdfTool(),
+            new ExtractTextTool(),
+            new ExtractPagesMarkdownTool(),
+        ];
+    }
+}
+```
+
+Tool input is storage-scoped and requires a relative `path` argument. Configure
+the disk and base path:
+
+```php
+// config/php-firepdf.php
+'ai_tools' => [
+    'disk' => env('FIREPDF_AI_TOOLS_DISK', 'local'),
+    'base_path' => env('FIREPDF_AI_TOOLS_BASE_PATH', 'incoming/pdfs'),
+],
+```
+
+Example call payload (from an AI tool invocation):
+
+```json
+{
+  "path": "contracts/sample.pdf"
+}
+```
+
+If you use these tools, install the Laravel AI SDK in your Laravel app:
+
+```bash
+composer require laravel/ai
+```
+
 ### Laravel Validation Rules (Real PDF Check)
 
 Object rule:
