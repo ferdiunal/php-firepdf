@@ -8,6 +8,7 @@ use Ferdiunal\FirePdf\Exceptions\InvalidInputException;
 use Ferdiunal\FirePdf\Exceptions\ProcessingException;
 use Ferdiunal\FirePdf\FirePdf;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\JsonSchema\Types\Type;
 use JsonException;
 use Laravel\Ai\Tools\Request;
 use Throwable;
@@ -20,7 +21,7 @@ abstract class AbstractFirePdfTool
     ) {}
 
     /**
-     * @return array<string, \Illuminate\JsonSchema\Types\Type>
+     * @return array<string, Type>
      */
     protected function pathSchema(JsonSchema $schema): array
     {
@@ -33,7 +34,7 @@ abstract class AbstractFirePdfTool
     }
 
     /**
-     * @return array<string, \Illuminate\JsonSchema\Types\Type>
+     * @return array<string, Type>
      */
     protected function pathAndPagesSchema(JsonSchema $schema): array
     {
@@ -50,7 +51,7 @@ abstract class AbstractFirePdfTool
         $requestPayload = $request->toArray();
         $path = $requestPayload['path'] ?? null;
 
-        if (!is_string($path) || trim($path) === '') {
+        if (! is_string($path) || trim($path) === '') {
             throw new InvalidInputException('The path argument is required and must be a non-empty string.');
         }
 
@@ -69,13 +70,13 @@ abstract class AbstractFirePdfTool
             return null;
         }
 
-        if (!is_array($pages)) {
+        if (! is_array($pages)) {
             throw new InvalidInputException('The pages argument must be an array of non-negative integers.');
         }
 
         $normalized = [];
         foreach ($pages as $page) {
-            if (!is_int($page) || $page < 0) {
+            if (! is_int($page) || $page < 0) {
                 throw new InvalidInputException('Each page in the pages argument must be a non-negative integer.');
             }
 
@@ -130,14 +131,14 @@ abstract class AbstractFirePdfTool
             return $this->firePdf;
         }
 
-        if (!function_exists('app')) {
+        if (! function_exists('app')) {
             throw new InvalidInputException('Laravel application container is not available.');
         }
 
         /** @var mixed $service */
         $service = app(FirePdf::class);
 
-        if (!$service instanceof FirePdf) {
+        if (! $service instanceof FirePdf) {
             throw new InvalidInputException('Unable to resolve FirePdf from the application container.');
         }
 

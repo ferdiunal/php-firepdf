@@ -13,7 +13,7 @@ final class ArrayValue
      */
     public static function string(array $data, string $key, string $default = ''): string
     {
-        if (!array_key_exists($key, $data)) {
+        if (! array_key_exists($key, $data)) {
             return $default;
         }
 
@@ -33,7 +33,7 @@ final class ArrayValue
      */
     public static function nullableString(array $data, string $key): ?string
     {
-        if (!array_key_exists($key, $data)) {
+        if (! array_key_exists($key, $data)) {
             return null;
         }
 
@@ -56,7 +56,7 @@ final class ArrayValue
      */
     public static function int(array $data, string $key, int $default = 0): int
     {
-        if (!array_key_exists($key, $data)) {
+        if (! array_key_exists($key, $data)) {
             return $default;
         }
 
@@ -79,7 +79,7 @@ final class ArrayValue
      */
     public static function float(array $data, string $key, float $default = 0.0): float
     {
-        if (!array_key_exists($key, $data)) {
+        if (! array_key_exists($key, $data)) {
             return $default;
         }
 
@@ -102,7 +102,7 @@ final class ArrayValue
      */
     public static function bool(array $data, string $key, bool $default = false): bool
     {
-        if (!array_key_exists($key, $data)) {
+        if (! array_key_exists($key, $data)) {
             return $default;
         }
 
@@ -135,7 +135,7 @@ final class ArrayValue
      */
     public static function intList(array $data, string $key): array
     {
-        if (!array_key_exists($key, $data) || !is_array($data[$key])) {
+        if (! array_key_exists($key, $data) || ! is_array($data[$key])) {
             return [];
         }
 
@@ -143,10 +143,12 @@ final class ArrayValue
         foreach ($data[$key] as $value) {
             if (is_int($value)) {
                 $result[] = $value;
+
                 continue;
             }
             if (is_float($value)) {
                 $result[] = (int) $value;
+
                 continue;
             }
             if (is_string($value) && is_numeric($value)) {
@@ -171,7 +173,7 @@ final class ArrayValue
      */
     public static function assocFromValue(mixed $value): array
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             return [];
         }
 
@@ -191,13 +193,13 @@ final class ArrayValue
      */
     public static function assocList(array $data, string $key): array
     {
-        if (!array_key_exists($key, $data) || !is_array($data[$key])) {
+        if (! array_key_exists($key, $data) || ! is_array($data[$key])) {
             return [];
         }
 
         $result = [];
         foreach ($data[$key] as $value) {
-            if (!is_array($value)) {
+            if (! is_array($value)) {
                 continue;
             }
 

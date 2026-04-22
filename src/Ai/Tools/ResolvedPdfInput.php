@@ -12,4 +12,3 @@ final readonly class ResolvedPdfInput
         public string $bytes,
     ) {}
 }
-

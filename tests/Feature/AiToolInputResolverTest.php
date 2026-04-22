@@ -17,7 +17,7 @@ describe('AI tool input resolver', function () {
     });
 
     afterEach(function (): void {
-        \Mockery::close();
+        Mockery::close();
     });
 
     $fakePdfResult = static fn (): PdfResult => new PdfResult(
@@ -38,7 +38,7 @@ describe('AI tool input resolver', function () {
         $pdfBytes = '%PDF-1.7 sample';
         Storage::disk('firepdf-ai')->put('incoming/docs/reports/sample.pdf', $pdfBytes);
 
-        $firePdf = \Mockery::mock(FirePdf::class);
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldReceive('detectPdfBytes')
             ->once()
             ->with($pdfBytes)
@@ -62,7 +62,7 @@ describe('AI tool input resolver', function () {
         $pdfBytes = '%PDF-1.7 normalized';
         Storage::disk('firepdf-ai')->put('incoming/docs/reports/normalized.pdf', $pdfBytes);
 
-        $firePdf = \Mockery::mock(FirePdf::class);
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldReceive('detectPdfBytes')
             ->once()
             ->with($pdfBytes)
@@ -78,8 +78,8 @@ describe('AI tool input resolver', function () {
         expect($resolved->scopedPath)->toBe('incoming/docs/reports/normalized.pdf');
     });
 
-    it('rejects traversal attempts', function () use ($fakePdfResult): void {
-        $firePdf = \Mockery::mock(FirePdf::class);
+    it('rejects traversal attempts', function (): void {
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldNotReceive('detectPdfBytes');
 
         $resolver = new PdfToolInputResolver(
@@ -92,8 +92,8 @@ describe('AI tool input resolver', function () {
         expect($resolve)->toThrow(InvalidInputException::class, 'Path traversal is not allowed');
     });
 
-    it('rejects non-pdf files', function () use ($fakePdfResult): void {
-        $firePdf = \Mockery::mock(FirePdf::class);
+    it('rejects non-pdf files', function (): void {
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldNotReceive('detectPdfBytes');
 
         $resolver = new PdfToolInputResolver(
@@ -106,8 +106,8 @@ describe('AI tool input resolver', function () {
         expect($resolve)->toThrow(InvalidInputException::class, 'Only files with the .pdf extension are allowed.');
     });
 
-    it('rejects absolute paths', function () use ($fakePdfResult): void {
-        $firePdf = \Mockery::mock(FirePdf::class);
+    it('rejects absolute paths', function (): void {
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldNotReceive('detectPdfBytes');
 
         $resolver = new PdfToolInputResolver(
@@ -120,8 +120,8 @@ describe('AI tool input resolver', function () {
         expect($resolve)->toThrow(InvalidInputException::class, 'Absolute paths are not allowed');
     });
 
-    it('rejects missing files within the configured scope', function () use ($fakePdfResult): void {
-        $firePdf = \Mockery::mock(FirePdf::class);
+    it('rejects missing files within the configured scope', function (): void {
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldNotReceive('detectPdfBytes');
 
         $resolver = new PdfToolInputResolver(

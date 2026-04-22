@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Ferdiunal\FirePdf\Exceptions\FFINotAvailableException;
 use Ferdiunal\FirePdf\Exceptions\InvalidInputException;
 use Ferdiunal\FirePdf\Exceptions\ProcessingException;
-use Ferdiunal\FirePdf\FirePdf;
 use Ferdiunal\FirePdf\FFI\Inspector;
+use Ferdiunal\FirePdf\FirePdf;
 use Ferdiunal\FirePdf\Runtime\FirePdfRuntimeOptions;
 
 describe('FirePdf', function () {
@@ -39,11 +39,11 @@ describe('FirePdf', function () {
             $this->markTestSkipped('FFI extension is loaded');
         }
 
-        new FirePdf();
+        new FirePdf;
     })->throws(FFINotAvailableException::class);
 
     it('throws InvalidInputException for malformed regions', function () use ($resolveLibraryPath) {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -55,7 +55,7 @@ describe('FirePdf', function () {
 
         // We can't instantiate FirePdf without a real library, so test
         // the validation at the FFI\Inspector level directly.
-        $inspector = new \Ferdiunal\FirePdf\FFI\Inspector(
+        $inspector = new Inspector(
             libPath: $libPath
         );
 
@@ -65,7 +65,7 @@ describe('FirePdf', function () {
     })->throws(InvalidInputException::class, 'Invalid region format');
 
     it('tracks runtime snapshot metrics for operations', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -74,7 +74,7 @@ describe('FirePdf', function () {
             $this->markTestSkipped('Native FFI library is not available');
         }
 
-        $firePdf = new FirePdf($libPath, new FirePdfRuntimeOptions());
+        $firePdf = new FirePdf($libPath, new FirePdfRuntimeOptions);
 
         try {
             $firePdf->processPdfBytes('not a pdf');
@@ -93,7 +93,7 @@ describe('FirePdf', function () {
     });
 
     it('triggers configured gc collection threshold', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -121,7 +121,7 @@ describe('FirePdf', function () {
     });
 
     it('sets soft limit recycle recommendation without failing request flow', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -149,7 +149,7 @@ describe('FirePdf', function () {
     });
 
     it('prefers hard limit reason over soft limit', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -176,7 +176,7 @@ describe('FirePdf', function () {
     });
 
     it('resets runtime snapshot counters and recycle flags', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -211,7 +211,7 @@ describe('FirePdf', function () {
     });
 
     it('can close and continue processing with reopened ffi handle', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 
@@ -220,7 +220,7 @@ describe('FirePdf', function () {
             $this->markTestSkipped('Native FFI library is not available');
         }
 
-        $firePdf = new FirePdf($libPath, new FirePdfRuntimeOptions());
+        $firePdf = new FirePdf($libPath, new FirePdfRuntimeOptions);
 
         try {
             $firePdf->processPdfBytes('not a pdf');
@@ -235,7 +235,7 @@ describe('FirePdf', function () {
     });
 
     it('can disable telemetry collection entirely', function () use ($resolveLibraryPath): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
 

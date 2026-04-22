@@ -12,10 +12,10 @@ function resolveValidPdfFixturePath(): ?string
     $projectRoot = dirname(__DIR__, 2);
 
     $candidates = [
-        $projectRoot . '/SaaS Chatbot Yapılandırma ve Maliyet Analizi.pdf',
-        $projectRoot . '/o_henry_oykuleri_turkce.pdf',
-        $projectRoot . '/../pdf-inspector/tests/fixtures/2013-app2.pdf',
-        $projectRoot . '/../pdf-inspector/tests/fixtures/td9264.pdf',
+        $projectRoot.'/SaaS Chatbot Yapılandırma ve Maliyet Analizi.pdf',
+        $projectRoot.'/o_henry_oykuleri_turkce.pdf',
+        $projectRoot.'/../pdf-inspector/tests/fixtures/2013-app2.pdf',
+        $projectRoot.'/../pdf-inspector/tests/fixtures/td9264.pdf',
     ];
 
     foreach ($candidates as $candidate) {
@@ -40,7 +40,7 @@ function makeUploadedFile(string $path, string $originalName): UploadedFile
 
 describe('PDF validation rules', function () {
     beforeEach(function (): void {
-        if (!extension_loaded('ffi')) {
+        if (! extension_loaded('ffi')) {
             $this->markTestSkipped('FFI extension is not available');
         }
     });
@@ -55,7 +55,7 @@ describe('PDF validation rules', function () {
 
         $validator = Validator::make(
             ['document' => $file],
-            ['document' => ['required', 'file', new ValidPdf()]]
+            ['document' => ['required', 'file', new ValidPdf]]
         );
 
         expect($validator->fails())->toBeFalse();
@@ -74,7 +74,7 @@ describe('PDF validation rules', function () {
 
             $validator = Validator::make(
                 ['document' => $file],
-                ['document' => ['required', 'file', new ValidPdf()]]
+                ['document' => ['required', 'file', new ValidPdf]]
             );
 
             expect($validator->fails())->toBeTrue();
@@ -95,7 +95,7 @@ describe('PDF validation rules', function () {
 
         $objectPass = Validator::make(
             ['document' => $validFile],
-            ['document' => ['required', 'file', new ValidPdf()]]
+            ['document' => ['required', 'file', new ValidPdf]]
         );
 
         expect($objectPass->fails())->toBeFalse();
@@ -119,7 +119,7 @@ describe('PDF validation rules', function () {
 
             $objectFail = Validator::make(
                 ['document' => $invalidFile],
-                ['document' => ['required', 'file', new ValidPdf()]]
+                ['document' => ['required', 'file', new ValidPdf]]
             );
 
             $aliasFail = Validator::make(

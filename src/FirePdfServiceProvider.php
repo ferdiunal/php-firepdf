@@ -40,7 +40,7 @@ class FirePdfServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
-        $this->loadTranslationsFrom(dirname(__DIR__) . '/resources/lang', 'firepdf');
+        $this->loadTranslationsFrom(dirname(__DIR__).'/resources/lang', 'firepdf');
 
         Validator::extend(
             'firepdf_pdf',

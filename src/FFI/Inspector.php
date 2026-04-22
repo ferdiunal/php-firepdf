@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Ferdiunal\FirePdf\FFI;
 
-use FFI;
 use Ferdiunal\FirePdf\Exceptions\FFINotAvailableException;
 use Ferdiunal\FirePdf\Exceptions\InvalidInputException;
 use Ferdiunal\FirePdf\Exceptions\NativeLibraryNotFoundException;
 use Ferdiunal\FirePdf\Exceptions\ProcessingException;
+use FFI;
+use FFI\CData;
 
 /**
  * Low-level FFI wrapper around the Rust pdf-inspector shared library.
@@ -26,12 +27,12 @@ class Inspector
 
     public function __construct(?string $libPath = null)
     {
-        if (!extension_loaded('ffi')) {
-            throw new FFINotAvailableException();
+        if (! extension_loaded('ffi')) {
+            throw new FFINotAvailableException;
         }
 
         $this->libPath = $libPath ?? $this->resolveDefaultLibPath();
-        if (!is_file($this->libPath)) {
+        if (! is_file($this->libPath)) {
             throw new NativeLibraryNotFoundException(
                 requestedPath: $this->libPath,
                 candidates: self::defaultLibraryCandidates()
@@ -52,9 +53,9 @@ class Inspector
 
         return [
             // Production-ready bundled location shipped with the package.
-            $packageRoot . '/native/lib/' . $platform . '/' . $libraryName,
+            $packageRoot.'/native/lib/'.$platform.'/'.$libraryName,
             // Development fallback for local Rust builds.
-            $packageRoot . '/native/pdf-inspector-ffi/target/release/' . $libraryName,
+            $packageRoot.'/native/pdf-inspector-ffi/target/release/'.$libraryName,
         ];
     }
 
@@ -102,7 +103,7 @@ class Inspector
             default => preg_replace('/[^a-z0-9_]/', '-', $arch) ?? 'unknown',
         };
 
-        return $os . '-' . $arch;
+        return $os.'-'.$arch;
     }
 
     private function buildHeader(): string
@@ -155,7 +156,7 @@ C;
         $json = FFI::string($cStr);
         $ffi->firepdf_free_string($cStr);
         $decoded = json_decode($json, true);
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             throw new ProcessingException('JsonDecode', 'Failed to decode FFI JSON response');
         }
         if (($decoded['ok'] ?? false) === false) {
@@ -165,7 +166,7 @@ C;
             throw new ProcessingException($code, $message);
         }
 
-        if (!array_key_exists('data', $decoded)) {
+        if (! array_key_exists('data', $decoded)) {
             throw new ProcessingException('InvalidResponse', 'FFI response is missing data payload');
         }
 
@@ -177,7 +178,6 @@ C;
 
     /**
      * @param  list<int>|null  $pages
-     * @return string|null
      */
     private function encodePages(?array $pages): ?string
     {
@@ -195,13 +195,13 @@ C;
     {
         $payload = [];
         foreach ($pageRegions as $entry) {
-            if (!is_array($entry) || count($entry) !== 2) {
+            if (! is_array($entry) || count($entry) !== 2) {
                 throw new InvalidInputException('Invalid pageRegions format. Expected [page, [[x1,y1,x2,y2], ...]]');
             }
             $page = (int) $entry[0];
             $regions = [];
             foreach ($entry[1] as $r) {
-                if (!is_array($r) || count($r) !== 4) {
+                if (! is_array($r) || count($r) !== 4) {
                     throw new InvalidInputException('Invalid region format. Expected [x1, y1, x2, y2]');
                 }
                 $regions[] = [(float) $r[0], (float) $r[1], (float) $r[2], (float) $r[3]];
@@ -213,7 +213,7 @@ C;
     }
 
     /**
-     * @return array{0: \FFI\CData, 1: int}
+     * @return array{0: CData, 1: int}
      */
     private function toByteBuffer(string $bytes): array
     {

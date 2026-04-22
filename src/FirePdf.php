@@ -40,7 +40,7 @@ class FirePdf
     public function __construct(?string $libPath = null, ?FirePdfRuntimeOptions $runtimeOptions = null)
     {
         $this->inspector = new Inspector($libPath);
-        $this->runtimeOptions = $runtimeOptions ?? new FirePdfRuntimeOptions();
+        $this->runtimeOptions = $runtimeOptions ?? new FirePdfRuntimeOptions;
         $this->currentMemoryBytes = memory_get_usage(true);
         $this->peakMemoryBytes = memory_get_peak_usage(true);
     }
@@ -96,12 +96,13 @@ class FirePdf
 
     /**
      * @template T
+     *
      * @param  callable(): T  $operation
      * @return T
      */
     private function observeOperation(callable $operation): mixed
     {
-        if (!$this->runtimeOptions->telemetry) {
+        if (! $this->runtimeOptions->telemetry) {
             return $operation();
         }
 
@@ -144,7 +145,7 @@ class FirePdf
         }
 
         $softLimitBytes = $this->runtimeOptions->softLimitBytes();
-        if ($softLimitBytes > 0 && $currentMemoryBytes >= $softLimitBytes && !$this->recycleRecommended) {
+        if ($softLimitBytes > 0 && $currentMemoryBytes >= $softLimitBytes && ! $this->recycleRecommended) {
             $this->recycleRecommended = true;
             $this->recycleReason = 'soft_limit_mb_exceeded';
         }
@@ -157,7 +158,7 @@ class FirePdf
     private function requireDataAssoc(array $decoded, string $operation): array
     {
         $data = $decoded['data'] ?? null;
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             throw new ProcessingException('InvalidResponse', "Expected object payload for {$operation}");
         }
 
@@ -171,13 +172,13 @@ class FirePdf
     private function requireDataAssocList(array $decoded, string $operation): array
     {
         $data = $decoded['data'] ?? null;
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             throw new ProcessingException('InvalidResponse', "Expected list payload for {$operation}");
         }
 
         $result = [];
         foreach ($data as $item) {
-            if (!is_array($item)) {
+            if (! is_array($item)) {
                 continue;
             }
 

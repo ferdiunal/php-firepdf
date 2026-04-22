@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Ferdiunal\FirePdf\Ai\Tools\ClassifyPdfTool;
+use Ferdiunal\FirePdf\Ai\Tools\DetectPdfTool;
+use Ferdiunal\FirePdf\Ai\Tools\ExtractPagesMarkdownTool;
+use Ferdiunal\FirePdf\Ai\Tools\ExtractTextTool;
 use Ferdiunal\FirePdf\Ai\Tools\PdfToolInputResolver;
+use Ferdiunal\FirePdf\Ai\Tools\ProcessPdfTool;
 use Ferdiunal\FirePdf\DTOs\PageMarkdown;
 use Ferdiunal\FirePdf\DTOs\PagesExtractionResult;
 use Ferdiunal\FirePdf\DTOs\PdfClassification;
@@ -12,8 +17,10 @@ use Ferdiunal\FirePdf\FirePdf;
 use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Tools\Request;
 
-if (!interface_exists(\Laravel\Ai\Contracts\Tool::class) || !class_exists(\Laravel\Ai\Tools\Request::class)) {
+if (! interface_exists(Tool::class) || ! class_exists(Request::class)) {
     test('AI tools require laravel/ai package', function (): void {
         $this->markTestSkipped('laravel/ai is not installed in this environment.');
     });
@@ -29,7 +36,7 @@ describe('AI tools', function () {
     });
 
     afterEach(function (): void {
-        \Mockery::close();
+        Mockery::close();
     });
 
     $fakePdfResult = static fn (): PdfResult => new PdfResult(
@@ -53,18 +60,18 @@ describe('AI tools', function () {
         );
 
         return [
-            'detect' => new \Ferdiunal\FirePdf\Ai\Tools\DetectPdfTool($firePdf, $resolver),
-            'classify' => new \Ferdiunal\FirePdf\Ai\Tools\ClassifyPdfTool($firePdf, $resolver),
-            'process' => new \Ferdiunal\FirePdf\Ai\Tools\ProcessPdfTool($firePdf, $resolver),
-            'extract_text' => new \Ferdiunal\FirePdf\Ai\Tools\ExtractTextTool($firePdf, $resolver),
-            'extract_pages_markdown' => new \Ferdiunal\FirePdf\Ai\Tools\ExtractPagesMarkdownTool($firePdf, $resolver),
+            'detect' => new DetectPdfTool($firePdf, $resolver),
+            'classify' => new ClassifyPdfTool($firePdf, $resolver),
+            'process' => new ProcessPdfTool($firePdf, $resolver),
+            'extract_text' => new ExtractTextTool($firePdf, $resolver),
+            'extract_pages_markdown' => new ExtractPagesMarkdownTool($firePdf, $resolver),
         ];
     };
 
     it('defines valid schemas for tool inputs', function () use ($makeToolContext): void {
-        $firePdf = \Mockery::mock(FirePdf::class);
+        $firePdf = Mockery::mock(FirePdf::class);
         $tools = $makeToolContext($firePdf);
-        $schema = new JsonSchemaTypeFactory();
+        $schema = new JsonSchemaTypeFactory;
 
         $detectSchema = $tools['detect']->schema($schema);
         $processSchema = $tools['process']->schema($schema);
@@ -77,7 +84,7 @@ describe('AI tools', function () {
         $pdfBytes = '%PDF-1.7 test bytes';
         Storage::disk('firepdf-ai')->put('incoming/docs/reports/sample.pdf', $pdfBytes);
 
-        $firePdf = \Mockery::mock(FirePdf::class);
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldReceive('detectPdfBytes')
             ->times(6)
             ->with($pdfBytes)
@@ -113,24 +120,24 @@ describe('AI tools', function () {
 
         $tools = $makeToolContext($firePdf);
 
-        $detectPayload = json_decode((string) $tools['detect']->handle(new \Laravel\Ai\Tools\Request([
+        $detectPayload = json_decode((string) $tools['detect']->handle(new Request([
             'path' => 'reports/sample.pdf',
         ])), true, 512, JSON_THROW_ON_ERROR);
 
-        $classifyPayload = json_decode((string) $tools['classify']->handle(new \Laravel\Ai\Tools\Request([
+        $classifyPayload = json_decode((string) $tools['classify']->handle(new Request([
             'path' => 'reports/sample.pdf',
         ])), true, 512, JSON_THROW_ON_ERROR);
 
-        $processPayload = json_decode((string) $tools['process']->handle(new \Laravel\Ai\Tools\Request([
+        $processPayload = json_decode((string) $tools['process']->handle(new Request([
             'path' => 'reports/sample.pdf',
             'pages' => [1, 0, 0],
         ])), true, 512, JSON_THROW_ON_ERROR);
 
-        $extractTextPayload = json_decode((string) $tools['extract_text']->handle(new \Laravel\Ai\Tools\Request([
+        $extractTextPayload = json_decode((string) $tools['extract_text']->handle(new Request([
             'path' => 'reports/sample.pdf',
         ])), true, 512, JSON_THROW_ON_ERROR);
 
-        $extractPagesPayload = json_decode((string) $tools['extract_pages_markdown']->handle(new \Laravel\Ai\Tools\Request([
+        $extractPagesPayload = json_decode((string) $tools['extract_pages_markdown']->handle(new Request([
             'path' => 'reports/sample.pdf',
             'pages' => [0, 0],
         ])), true, 512, JSON_THROW_ON_ERROR);
@@ -156,17 +163,17 @@ describe('AI tools', function () {
         expect($extractPagesPayload['data']['pages'][0]['markdown'])->toBe('# Page 1');
     });
 
-    it('returns invalid_input for traversal and missing file cases', function () use ($makeToolContext, $fakePdfResult): void {
-        $firePdf = \Mockery::mock(FirePdf::class);
+    it('returns invalid_input for traversal and missing file cases', function () use ($makeToolContext): void {
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldNotReceive('detectPdfBytes');
 
         $tool = $makeToolContext($firePdf)['detect'];
 
-        $traversalPayload = json_decode((string) $tool->handle(new \Laravel\Ai\Tools\Request([
+        $traversalPayload = json_decode((string) $tool->handle(new Request([
             'path' => '../secrets/file.pdf',
         ])), true, 512, JSON_THROW_ON_ERROR);
 
-        $missingPayload = json_decode((string) $tool->handle(new \Laravel\Ai\Tools\Request([
+        $missingPayload = json_decode((string) $tool->handle(new Request([
             'path' => 'reports/missing.pdf',
         ])), true, 512, JSON_THROW_ON_ERROR);
 
@@ -181,7 +188,7 @@ describe('AI tools', function () {
         $pdfBytes = '%PDF-1.7 broken parse';
         Storage::disk('firepdf-ai')->put('incoming/docs/reports/broken.pdf', $pdfBytes);
 
-        $firePdf = \Mockery::mock(FirePdf::class);
+        $firePdf = Mockery::mock(FirePdf::class);
         $firePdf->shouldReceive('detectPdfBytes')
             ->once()
             ->with($pdfBytes)
@@ -189,7 +196,7 @@ describe('AI tools', function () {
 
         $tool = $makeToolContext($firePdf)['detect'];
 
-        $payload = json_decode((string) $tool->handle(new \Laravel\Ai\Tools\Request([
+        $payload = json_decode((string) $tool->handle(new Request([
             'path' => 'reports/broken.pdf',
         ])), true, 512, JSON_THROW_ON_ERROR);
 
